@@ -1,0 +1,6 @@
+composer.phar
+composer.lock
+/vendor/
+/.idea/
+/node_modules/
+/coverage/
