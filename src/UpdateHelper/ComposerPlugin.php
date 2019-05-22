@@ -1,13 +1,12 @@
 <?php
 
-namespace NodejsPhpFallback;
+namespace UpdateHelper;
 
 use Composer\Composer;
 use Composer\EventDispatcher\Event;
 use Composer\EventDispatcher\EventSubscriberInterface;
 use Composer\IO\IOInterface;
 use Composer\Plugin\PluginInterface;
-use UpdateHelper\UpdateHelper;
 
 class ComposerPlugin implements PluginInterface, EventSubscriberInterface
 {
