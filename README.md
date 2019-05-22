@@ -9,6 +9,9 @@ Allow you to display update/upgrade instructions to your library users.
 "require": {
     "kylekatarnls/update-helper": "^1"
 },
+"require-dev": {
+    "composer/composer": "^1.2",
+},
 "extra": {
     "update-helper": "MyNamesapace\\MyUpdateHelper"
 },
@@ -35,9 +38,9 @@ use UpdateHelper\UpdateHelperInterface;
 class MyUpdateHelper implements UpdateHelperInterface
 {
     /**
-     * @param \Composer\Installer\PackageEvent|Composer\Script\Event $event
-     * @param \Composer\IO\IOInterface                               $io
-     * @param \Composer\Composer                                     $composer
+     * @param \Composer\Installer\PackageEvent|\Composer\Script\Event $event
+     * @param \Composer\IO\IOInterface                                $io
+     * @param \Composer\Composer                                      $composer
      */
     public function check(Event $event, IOInterface $io, Composer $composer)
     {
