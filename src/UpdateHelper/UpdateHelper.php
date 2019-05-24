@@ -57,12 +57,18 @@ class UpdateHelper
         if ($event instanceof ScriptEvent || $event instanceof PackageEvent) {
             $io = $event->getIO();
             $composer = $event->getComposer();
+            $autoload = __DIR__.'/../../../../autoload.php';
+
+            if (file_exists($autoload)) {
+                include_once $autoload;
+            }
+
             $classes = static::getUpdateHelperConfig($composer);
 
             foreach ($classes as $file => $class) {
-                if (is_string($class) && class_exists($class)) {
-                    $error = null;
+                $error = null;
 
+                if (is_string($class) && class_exists($class)) {
                     try {
                         $helper = new $class();
                     } catch (\Exception $e) {
