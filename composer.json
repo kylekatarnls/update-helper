@@ -11,10 +11,10 @@
     ],
     "require": {
         "php": ">=5.3.0",
-        "composer-plugin-api": "^1.0"
+        "composer-plugin-api": "^1.8.5"
     },
     "require-dev": {
-        "composer/composer": "^1.2",
+        "composer/composer": "^2.0.x-dev",
         "phpunit/phpunit": ">=4.8.35 <6.0",
         "codeclimate/php-test-reporter": "dev-master"
     },
