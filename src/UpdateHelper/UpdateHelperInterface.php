@@ -8,5 +8,5 @@ use Composer\IO\IOInterface;
 
 interface UpdateHelperInterface
 {
-    public function check(Event $event, IOInterface $io, Composer $composer);
+    public function check(Event $event = null, IOInterface $io = null, Composer $composer = null, UpdateHelper $helper = null);
 }

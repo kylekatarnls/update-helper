@@ -5,11 +5,26 @@ namespace UpdateHelper;
 use Composer\Composer;
 use Composer\EventDispatcher\Event;
 use Composer\Installer\PackageEvent;
+use Composer\IO\IOInterface;
 use Composer\Json\JsonFile;
 use Composer\Script\Event as ScriptEvent;
+use Composer\Semver\Semver;
 
 class UpdateHelper
 {
+    /** @var Event */
+    private $event;
+    /** @var IOInterface */
+    private $io;
+    /** @var Composer */
+    private $composer;
+    /** @var array */
+    private $dependencies;
+    /** @var string */
+    private $composerFilePath;
+    /** @var JsonFile */
+    private $file;
+
     protected static function appendConfig(&$classes, $directory, $key = null)
     {
         $file = $directory.DIRECTORY_SEPARATOR.'composer.json';
@@ -78,18 +93,204 @@ class UpdateHelper
                     }
 
                     if (!$error && $helper instanceof UpdateHelperInterface) {
-                        $helper->check($event, $io, $composer);
+                        $helper->check($event, $io, $composer, new static($event, $io, $composer));
 
                         continue;
                     }
                 }
 
                 if (!$error) {
-                    $error = json_encode($class).' is not an instance of UpdateHelperInterface.';
+                    $error = JsonFile::encode($class).' is not an instance of UpdateHelperInterface.';
                 }
 
                 $io->writeError('UpdateHelper error in '.$file.":\n".$error);
             }
         }
+    }
+
+    public function __construct(Event $event, IOInterface $io = null, Composer $composer = null)
+    {
+        $this->event = $event;
+        $this->io = $io ?: (method_exists($event, 'getIO') ? $event->getIO() : null);
+        $this->composer = $composer ?: (method_exists($event, 'getComposer') ? $event->getComposer() : null);
+
+        if ($this->composer) {
+            $this->composerFilePath = dirname($this->composer->getConfig()->get('vendor-dir')).'/composer.json';
+            $this->file = new JsonFile($this->composerFilePath);
+            $this->dependencies = $this->file->read();
+        }
+    }
+
+    /**
+     * @return JsonFile
+     */
+    public function getFile()
+    {
+        return $this->file;
+    }
+
+    /**
+     * @return string
+     */
+    public function getComposerFilePath()
+    {
+        return $this->composerFilePath;
+    }
+
+    /**
+     * @return Composer
+     */
+    public function getComposer()
+    {
+        return $this->composer;
+    }
+
+    /**
+     * @return array
+     */
+    public function getDependencies()
+    {
+        return $this->dependencies;
+    }
+
+    /**
+     * @return array
+     */
+    public function getDevDependencies()
+    {
+        return isset($this->dependencies['require-dev']) ? $this->dependencies['require-dev'] : array();
+    }
+
+    /**
+     * @return array
+     */
+    public function getProdDependencies()
+    {
+        return isset($this->dependencies['require']) ? $this->dependencies['require'] : array();
+    }
+
+    /**
+     * @return array
+     */
+    public function getFlattenDependencies()
+    {
+        return array_merge($this->getDevDependencies(), $this->getProdDependencies());
+    }
+
+    /**
+     * @return Event
+     */
+    public function getEvent()
+    {
+        return $this->event;
+    }
+
+    /**
+     * @return IOInterface
+     */
+    public function getIo()
+    {
+        return $this->io;
+    }
+
+    /**
+     * @param string $dependency
+     *
+     * @return bool
+     */
+    public function hasAsDevDependency($dependency)
+    {
+        return isset($this->dependencies['require-dev'][$dependency]);
+    }
+
+    /**
+     * @param string $dependency
+     *
+     * @return bool
+     */
+    public function hasAsProdDependency($dependency)
+    {
+        return isset($this->dependencies['require'][$dependency]);
+    }
+
+    /**
+     * @param string $dependency
+     *
+     * @return bool
+     */
+    public function hasAsDependency($dependency)
+    {
+        return $this->hasAsDevDependency($dependency) || $this->hasAsProdDependency($dependency);
+    }
+
+    /**
+     * @param string $dependency
+     * @param string $version
+     *
+     * @return bool
+     */
+    public function isDependencyAtLeast($dependency, $version)
+    {
+        if ($this->hasAsProdDependency($dependency)) {
+            return Semver::satisfies($version, $this->dependencies['require'][$dependency]);
+        }
+
+        if ($this->hasAsDevDependency($dependency)) {
+            return Semver::satisfies($version, $this->dependencies['require-dev'][$dependency]);
+        }
+
+        return false;
+    }
+
+    /**
+     * @param string $dependency
+     * @param string $version
+     *
+     * @return bool
+     */
+    public function isDependencyLesserThan($dependency, $version)
+    {
+        return !$this->isDependencyAtLeast($dependency, $version);
+    }
+
+    /**
+     * @param string $dependency
+     * @param string $version
+     * @param array  $environments
+     *
+     * @throws \Exception
+     *
+     * @return $this
+     */
+    public function setDependencyVersion($dependency, $version, $environments = array('require', 'require-dev'))
+    {
+        if (!$this->composerFilePath) {
+            throw new \RuntimeException('No composer instance detected.');
+        }
+
+        foreach ($environments as $environment) {
+            if (isset($this->dependencies[$environment], $data[$environment][$dependency])) {
+                $this->dependencies[$environment][$dependency] = $version;
+            }
+        }
+
+        $file = new JsonFile($this->composerFilePath);
+        $file->write($this->dependencies);
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function update()
+    {
+        $output = shell_exec('composer update');
+
+        if (!empty($output) && $this->io) {
+            $this->io->write($output);
+        }
+
+        return $this;
     }
 }

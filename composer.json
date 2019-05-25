@@ -1,6 +1,6 @@
 {
     "name": "kylekatarnls/update-helper",
-    "description": "",
+    "description": "Update helper",
     "type": "composer-plugin",
     "license": "MIT",
     "authors": [
