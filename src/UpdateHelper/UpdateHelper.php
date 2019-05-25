@@ -287,10 +287,28 @@ class UpdateHelper
     {
         $output = shell_exec('composer update');
 
-        if (!empty($output) && $this->io) {
-            $this->io->write($output);
+        if (!empty($output)) {
+            $this->write($output);
         }
 
         return $this;
+    }
+
+    /**
+     * @param string|array $text
+     */
+    public function write($text)
+    {
+        if ($this->io) {
+            $this->io->write($text);
+
+            return;
+        }
+
+        if (is_array($text)) {
+            $text = implode("\n", $text);
+        }
+
+        echo $text;
     }
 }
