@@ -93,7 +93,7 @@ class UpdateHelper
                     }
 
                     if (!$error && $helper instanceof UpdateHelperInterface) {
-                        $helper->check($event, $io, $composer, new static($event, $io, $composer));
+                        $helper->check(new static($event, $io, $composer));
 
                         continue;
                     }
@@ -146,6 +146,22 @@ class UpdateHelper
     }
 
     /**
+     * @return Event
+     */
+    public function getEvent()
+    {
+        return $this->event;
+    }
+
+    /**
+     * @return IOInterface
+     */
+    public function getIo()
+    {
+        return $this->io;
+    }
+
+    /**
      * @return array
      */
     public function getDependencies()
@@ -175,22 +191,6 @@ class UpdateHelper
     public function getFlattenDependencies()
     {
         return array_merge($this->getDevDependencies(), $this->getProdDependencies());
-    }
-
-    /**
-     * @return Event
-     */
-    public function getEvent()
-    {
-        return $this->event;
-    }
-
-    /**
-     * @return IOInterface
-     */
-    public function getIo()
-    {
-        return $this->io;
     }
 
     /**
@@ -264,13 +264,28 @@ class UpdateHelper
      */
     public function setDependencyVersion($dependency, $version, $environments = array('require', 'require-dev'))
     {
+        return $this->setDependencyVersions(array($dependency => $version), $environments);
+    }
+
+    /**
+     * @param array $dependencies
+     * @param array $environments
+     *
+     * @throws \Exception
+     *
+     * @return $this
+     */
+    public function setDependencyVersions($dependencies, $environments = array('require', 'require-dev'))
+    {
         if (!$this->composerFilePath) {
             throw new \RuntimeException('No composer instance detected.');
         }
 
         foreach ($environments as $environment) {
-            if (isset($this->dependencies[$environment], $data[$environment][$dependency])) {
-                $this->dependencies[$environment][$dependency] = $version;
+            foreach ($dependencies as $dependency => $version) {
+                if (isset($this->dependencies[$environment], $data[$environment][$dependency])) {
+                    $this->dependencies[$environment][$dependency] = $version;
+                }
             }
         }
 
@@ -310,5 +325,13 @@ class UpdateHelper
         }
 
         echo $text;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isInteractive()
+    {
+        return $this->io && $this->io->isInteractive();
     }
 }
