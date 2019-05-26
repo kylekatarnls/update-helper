@@ -300,7 +300,7 @@ class UpdateHelper
      */
     public function update()
     {
-        $output = shell_exec('composer update');
+        $output = shell_exec('composer update --no-scripts');
 
         if (!empty($output)) {
             $this->write($output);
