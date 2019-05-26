@@ -281,16 +281,21 @@ class UpdateHelper
             throw new \RuntimeException('No composer instance detected.');
         }
 
+        $touched = false;
+
         foreach ($environments as $environment) {
             foreach ($dependencies as $dependency => $version) {
-                if (isset($this->dependencies[$environment], $data[$environment][$dependency])) {
+                if (isset($this->dependencies[$environment], $this->dependencies[$environment][$dependency])) {
                     $this->dependencies[$environment][$dependency] = $version;
+                    $touched = true;
                 }
             }
         }
 
-        $file = new JsonFile($this->composerFilePath);
-        $file->write($this->dependencies);
+        if ($touched) {
+            $file = new JsonFile($this->composerFilePath);
+            $file->write($this->dependencies);
+        }
 
         return $this;
     }

@@ -16,10 +16,7 @@ Allow you to display update/upgrade instructions to your library users.
     "update-helper": "MyNamesapace\\MyUpdateHelper"
 },
 "scripts": {
-    "post-install-cmd": [
-        "UpdateHelper\\UpdateHelper::check"
-    ],
-    "post-update-cmd": [
+    "post-autoload-dump": [
         "UpdateHelper\\UpdateHelper::check"
     ]
 },
