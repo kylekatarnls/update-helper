@@ -115,8 +115,8 @@ class UpdateHelper
         $this->composer = $composer ?: (method_exists($event, 'getComposer') ? $event->getComposer() : null);
 
         if ($this->composer &&
-            ($directory = $this->composer->getConfig()->get('vendor-dir')) &&
-            file_exists($file = dirname($directory).'/composer.json')
+            ($directory = $this->composer->getConfig()->get('archive-dir')) &&
+            file_exists($file = $directory.'/composer.json')
         ) {
             $this->composerFilePath = $file;
             $this->file = new JsonFile($this->composerFilePath);
