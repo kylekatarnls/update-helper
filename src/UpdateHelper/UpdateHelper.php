@@ -19,7 +19,7 @@ class UpdateHelper
     /** @var Composer */
     private $composer;
     /** @var array */
-    private $dependencies;
+    private $dependencies = array();
     /** @var string */
     private $composerFilePath;
     /** @var JsonFile */
@@ -114,8 +114,11 @@ class UpdateHelper
         $this->io = $io ?: (method_exists($event, 'getIO') ? $event->getIO() : null);
         $this->composer = $composer ?: (method_exists($event, 'getComposer') ? $event->getComposer() : null);
 
-        if ($this->composer) {
-            $this->composerFilePath = dirname($this->composer->getConfig()->get('vendor-dir')).'/composer.json';
+        if ($this->composer &&
+            ($directory = $this->composer->getConfig()->get('vendor-dir')) &&
+            file_exists($file = "$directory/composer.json")
+        ) {
+            $this->composerFilePath = $file;
             $this->file = new JsonFile($this->composerFilePath);
             $this->dependencies = $this->file->read();
         }
@@ -293,6 +296,10 @@ class UpdateHelper
         }
 
         if ($touched) {
+            if (!$this->composerFilePath) {
+                throw new \RuntimeException('composer.json not found (custom vendor-dir are not yet supported).');
+            }
+
             $file = new JsonFile($this->composerFilePath);
             $file->write($this->dependencies);
         }
