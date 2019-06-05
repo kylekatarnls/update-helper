@@ -28,6 +28,10 @@ class ComposerPlugin implements PluginInterface, EventSubscriberInterface
 
     public function onAutoloadDump(Event $event)
     {
+        if (!class_exists('UpdateHelper\\UpdateHelper')) {
+            return;
+        }
+
         UpdateHelper::check($event);
     }
 }
