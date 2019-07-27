@@ -14,7 +14,7 @@ class UpdateHelper
 {
     /** @var Event */
     private $event;
-    /** @var IOInterface */
+    /** @var IOInterface|null */
     private $io;
     /** @var Composer */
     private $composer;
@@ -69,42 +69,39 @@ class UpdateHelper
 
     public static function check(Event $event)
     {
-        if ($event instanceof ScriptEvent || $event instanceof PackageEvent) {
-            $io = $event->getIO();
-            $composer = $event->getComposer();
-            $autoload = __DIR__.'/../../../../autoload.php';
+        if (!($event instanceof ScriptEvent) && !($event instanceof PackageEvent)) {
+            return;
+        }
 
-            if (file_exists($autoload)) {
-                include_once $autoload;
+        $io = $event->getIO();
+        $composer = $event->getComposer();
+        $autoload = $composer->getConfig()->get('vendor-dir').'/autoload.php';
+
+        if (file_exists($autoload)) {
+            include_once $autoload;
+        }
+
+        $classes = static::getUpdateHelperConfig($composer);
+
+        foreach ($classes as $file => $class) {
+            if (!class_exists($class)) {
+                $io->writeError(JsonFile::encode($class).' is not a class in file '.$file);
+                continue;
             }
 
-            $classes = static::getUpdateHelperConfig($composer);
-
-            foreach ($classes as $file => $class) {
-                $error = null;
-
-                if (is_string($class) && class_exists($class)) {
-                    try {
-                        $helper = new $class();
-                    } catch (\Exception $e) {
-                        $error = $e->getMessage()."\nFile: ".$e->getFile()."\nLine:".$e->getLine()."\n\n".$e->getTraceAsString();
-                    } catch (\Throwable $e) {
-                        $error = $e->getMessage()."\nFile: ".$e->getFile()."\nLine:".$e->getLine()."\n\n".$e->getTraceAsString();
-                    }
-
-                    if (!$error && $helper instanceof UpdateHelperInterface) {
-                        $helper->check(new static($event, $io, $composer));
-
-                        continue;
-                    }
-                }
-
-                if (!$error) {
-                    $error = JsonFile::encode($class).' is not an instance of UpdateHelperInterface.';
-                }
-
-                $io->writeError('UpdateHelper error in '.$file.":\n".$error);
+            try {
+                $helper = new $class();
+            } catch (\Exception | \Throwable $e) {
+                $io->writeError($e->getMessage()."\nFile: ".$e->getFile()."\nLine:".$e->getLine()."\n\n".$e->getTraceAsString());
+                continue;
             }
+
+            if (!($helper instanceof UpdateHelperInterface)) {
+                $io->writeError(JsonFile::encode($class).' is not an instance of UpdateHelperInterface in file '.$file);
+                continue;
+            }
+
+            $helper->check(new static($event, $io, $composer));
         }
     }
 
@@ -157,7 +154,7 @@ class UpdateHelper
     }
 
     /**
-     * @return IOInterface
+     * @return IOInterface|null
      */
     public function getIo()
     {
