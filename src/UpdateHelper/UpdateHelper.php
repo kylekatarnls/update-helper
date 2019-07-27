@@ -91,7 +91,10 @@ class UpdateHelper
 
             try {
                 $helper = new $class();
-            } catch (\Exception | \Throwable $e) {
+            } catch (\Exception $e) {
+                $io->writeError($e->getMessage()."\nFile: ".$e->getFile()."\nLine:".$e->getLine()."\n\n".$e->getTraceAsString());
+                continue;
+            } catch (\Throwable $e) {
                 $io->writeError($e->getMessage()."\nFile: ".$e->getFile()."\nLine:".$e->getLine()."\n\n".$e->getTraceAsString());
                 continue;
             }
