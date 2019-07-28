@@ -86,7 +86,7 @@ class UpdateHelper
         $classes = static::getUpdateHelperConfig($composer);
 
         foreach ($classes as $file => $class) {
-            if (!class_exists($class)) {
+            if (!is_string($class) || !class_exists($class)) {
                 $io->writeError(JsonFile::encode($class).' is not a class in file '.$file);
                 continue;
             }
