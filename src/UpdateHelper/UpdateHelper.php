@@ -72,10 +72,10 @@ class UpdateHelper
     }
 
     /**
-     * @param Event $event
+     * @param Event       $event
      * @param IOInterface $io
-     * @param Composer $composer
-     * @param string[] $subClasses
+     * @param Composer    $composer
+     * @param string[]    $subClasses
      */
     protected static function checkHelper($event, IOInterface $io, $composer, $class)
     {
@@ -99,11 +99,11 @@ class UpdateHelper
     }
 
     /**
-     * @param string $file
-     * @param Event $event
+     * @param string      $file
+     * @param Event       $event
      * @param IOInterface $io
-     * @param Composer $composer
-     * @param string[] $subClasses
+     * @param Composer    $composer
+     * @param string[]    $subClasses
      */
     protected static function checkFileHelpers($file, $event, IOInterface $io, $composer, array $subClasses)
     {
