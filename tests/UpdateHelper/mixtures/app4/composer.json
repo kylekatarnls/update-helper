@@ -1,0 +1,16 @@
+{
+    "config": {
+        "vendor-dir": "foo"
+    },
+    "require": {
+        "a/b": "^1.0"
+    },
+    "require-dev": {
+        "c/d": "^2.0"
+    },
+    "extra": {
+        "update-helper": [
+            "Foo\\Biz"
+        ]
+    }
+}

@@ -1,0 +1,39 @@
+language: php
+
+cache:
+  apt: true
+  directories:
+    - $HOME/.composer/cache
+
+sudo: false
+
+env:
+  global:
+    - setup=basic
+
+install:
+  - if [[ $setup = 'nightly'  ]]; then COMPOSER_MEMORY_LIMIT=-1 travis_retry composer update --prefer-dist --no-interaction --no-suggest --ignore-platform-reqs; fi
+  - if [[ $setup = 'basic'  ]]; then COMPOSER_MEMORY_LIMIT=-1 travis_retry composer update --prefer-dist --no-interaction --no-suggest; fi
+
+script:
+  - vendor/bin/phpunit --verbose --coverage-clover=coverage.xml --coverage-text
+
+after_success:
+  - if [[ $coverage = 'true' ]]; then bash <(curl -s https://codecov.io/bash); fi
+
+matrix:
+  include:
+    - php: '5.3'
+      dist: precise
+    - php: '5.4'
+      dist: trusty
+    - php: '5.5'
+      dist: trusty
+    - php: '5.6'
+    - php: '7.0'
+    - php: '7.1'
+    - php: '7.2'
+    - php: '7.3'
+      env: coverage=true
+    - php: nightly
+      env: setup=nightly
