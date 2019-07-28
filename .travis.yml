@@ -12,8 +12,8 @@ env:
     - setup=basic
 
 install:
-  - if [[ $setup = 'nightly'  ]]; then travis_retry composer update --prefer-dist --no-interaction --no-suggest --ignore-platform-reqs; fi
-  - if [[ $setup = 'basic'  ]]; then travis_retry composer update --prefer-dist --no-interaction --no-suggest; fi
+  - if [[ $setup = 'nightly'  ]]; then COMPOSER_MEMORY_LIMIT=-1 travis_retry composer update --prefer-dist --no-interaction --no-suggest --ignore-platform-reqs; fi
+  - if [[ $setup = 'basic'  ]]; then COMPOSER_MEMORY_LIMIT=-1 travis_retry composer update --prefer-dist --no-interaction --no-suggest; fi
 
 script:
   - vendor/bin/phpunit --verbose --coverage-clover=coverage.xml --coverage-text
