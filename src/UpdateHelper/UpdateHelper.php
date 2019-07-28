@@ -10,13 +10,15 @@ use Composer\Json\JsonFile;
 use Composer\Script\Event as ScriptEvent;
 use Composer\Semver\Semver;
 use Exception;
+use InvalidArgumentException;
+use RuntimeException;
 use Throwable;
 
 class UpdateHelper
 {
     /** @var Event */
     private $event;
-    /** @var IOInterface */
+    /** @var IOInterface|null */
     private $io;
     /** @var Composer */
     private $composer;
@@ -69,44 +71,76 @@ class UpdateHelper
         return $npm;
     }
 
+    /**
+     * @param Event       $event
+     * @param IOInterface $io
+     * @param Composer    $composer
+     * @param string[]    $subClasses
+     */
+    protected static function checkHelper($event, IOInterface $io, $composer, $class)
+    {
+        if (!is_string($class) || !class_exists($class)) {
+            throw new NotUpdateInterfaceInstanceException();
+        }
+
+        try {
+            $helper = new $class();
+        } catch (Exception $e) {
+            throw new InvalidArgumentException($e->getMessage(), 1000, $e);
+        } catch (Throwable $e) {
+            throw new InvalidArgumentException($e->getMessage(), 1000, $e);
+        }
+
+        if (!($helper instanceof UpdateHelperInterface)) {
+            throw new NotUpdateInterfaceInstanceException();
+        }
+
+        $helper->check(new static($event, $io, $composer));
+    }
+
+    /**
+     * @param string      $file
+     * @param Event       $event
+     * @param IOInterface $io
+     * @param Composer    $composer
+     * @param string[]    $subClasses
+     */
+    protected static function checkFileHelpers($file, $event, IOInterface $io, $composer, array $subClasses)
+    {
+        foreach ($subClasses as $class) {
+            try {
+                static::checkHelper($event, $io, $composer, $class);
+            } catch (InvalidArgumentException $e) {
+                $io->writeError($e instanceof NotUpdateInterfaceInstanceException
+                    ? 'UpdateHelper error in '.$file.":\n".JsonFile::encode($class).' is not an instance of UpdateHelperInterface.'
+                    : 'UpdateHelper error: '.$e->getPrevious()->getMessage().
+                        "\nFile: ".$e->getPrevious()->getFile().
+                        "\nLine:".$e->getPrevious()->getLine().
+                        "\n\n".$e->getPrevious()->getTraceAsString()
+                );
+                continue;
+            }
+        }
+    }
+
     public static function check(Event $event)
     {
-        if ($event instanceof ScriptEvent || $event instanceof PackageEvent) {
-            $io = $event->getIO();
-            $composer = $event->getComposer();
-            $autoload = __DIR__.'/../../../../autoload.php';
+        if (!($event instanceof ScriptEvent) && !($event instanceof PackageEvent)) {
+            return;
+        }
 
-            if (file_exists($autoload)) {
-                include_once $autoload;
-            }
+        $io = $event->getIO();
+        $composer = $event->getComposer();
+        $autoload = $composer->getConfig()->get('vendor-dir').'/autoload.php';
 
-            $classes = static::getUpdateHelperConfig($composer);
+        if (file_exists($autoload)) {
+            include_once $autoload;
+        }
 
-            foreach ($classes as $file => $class) {
-                $error = null;
+        $classes = static::getUpdateHelperConfig($composer);
 
-                if (is_string($class) && class_exists($class)) {
-                    try {
-                        $helper = new $class();
-                    } catch (Exception $e) {
-                        $error = $e->getMessage()."\nFile: ".$e->getFile()."\nLine:".$e->getLine()."\n\n".$e->getTraceAsString();
-                    } catch (Throwable $e) {
-                        $error = $e->getMessage()."\nFile: ".$e->getFile()."\nLine:".$e->getLine()."\n\n".$e->getTraceAsString();
-                    }
-
-                    if (!$error && $helper instanceof UpdateHelperInterface) {
-                        $helper->check(new static($event, $io, $composer));
-
-                        continue;
-                    }
-                }
-
-                if (!$error) {
-                    $error = JsonFile::encode($class).' is not an instance of UpdateHelperInterface.';
-                }
-
-                $io->writeError('UpdateHelper error in '.$file.":\n".$error);
-            }
+        foreach ($classes as $file => $subClasses) {
+            static::checkFileHelpers($file, $event, $io, $composer, (array) $subClasses);
         }
     }
 
@@ -159,7 +193,7 @@ class UpdateHelper
     }
 
     /**
-     * @return IOInterface
+     * @return IOInterface|null
      */
     public function getIo()
     {
@@ -283,7 +317,7 @@ class UpdateHelper
     public function setDependencyVersions($dependencies, $environments = array('require', 'require-dev'))
     {
         if (!$this->composerFilePath) {
-            throw new \RuntimeException('No composer instance detected.');
+            throw new RuntimeException('No composer instance detected.');
         }
 
         $touched = false;
@@ -299,7 +333,7 @@ class UpdateHelper
 
         if ($touched) {
             if (!$this->composerFilePath) {
-                throw new \RuntimeException('composer.json not found (custom vendor-dir are not yet supported).');
+                throw new RuntimeException('composer.json not found (custom vendor-dir are not yet supported).');
             }
 
             $file = new JsonFile($this->composerFilePath);
