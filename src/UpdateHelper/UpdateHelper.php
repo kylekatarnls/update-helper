@@ -9,6 +9,8 @@ use Composer\IO\IOInterface;
 use Composer\Json\JsonFile;
 use Composer\Script\Event as ScriptEvent;
 use Composer\Semver\Semver;
+use Exception;
+use Throwable;
 
 class UpdateHelper
 {
@@ -33,7 +35,7 @@ class UpdateHelper
 
         try {
             $dependencyConfig = $json->read();
-        } catch (\RuntimeException $e) {
+        } catch (Exception $e) {
             $dependencyConfig = null;
         }
 
@@ -86,9 +88,9 @@ class UpdateHelper
                 if (is_string($class) && class_exists($class)) {
                     try {
                         $helper = new $class();
-                    } catch (\Exception $e) {
+                    } catch (Exception $e) {
                         $error = $e->getMessage()."\nFile: ".$e->getFile()."\nLine:".$e->getLine()."\n\n".$e->getTraceAsString();
-                    } catch (\Throwable $e) {
+                    } catch (Throwable $e) {
                         $error = $e->getMessage()."\nFile: ".$e->getFile()."\nLine:".$e->getLine()."\n\n".$e->getTraceAsString();
                     }
 
@@ -261,7 +263,7 @@ class UpdateHelper
      * @param string $version
      * @param array  $environments
      *
-     * @throws \Exception
+     * @throws Exception
      *
      * @return $this
      */
@@ -274,7 +276,7 @@ class UpdateHelper
      * @param array $dependencies
      * @param array $environments
      *
-     * @throws \Exception
+     * @throws Exception
      *
      * @return $this
      */

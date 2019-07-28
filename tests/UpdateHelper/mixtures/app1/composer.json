@@ -1,0 +1,11 @@
+{
+  "extra": {
+    "update-helper": [
+      "Foo\\Bar"
+    ],
+    "other": [
+      "A\\B",
+      "C\\D"
+    ]
+  }
+}

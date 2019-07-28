@@ -25,6 +25,11 @@
             "UpdateHelper\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "UpdateHelper\\Tests\\": "tests/UpdateHelper/"
+        }
+    },
     "scripts": {
         "post-install-cmd": [
             "UpdateHelper\\UpdateHelper::check"
