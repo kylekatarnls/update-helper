@@ -110,17 +110,23 @@ class UpdateHelper
         foreach ($subClasses as $class) {
             try {
                 static::checkHelper($event, $io, $composer, $class);
-            } catch (InvalidArgumentException $e) {
-                $io->writeError($e instanceof NotUpdateInterfaceInstanceException
-                    ? 'UpdateHelper error in '.$file.":\n".JsonFile::encode($class).' is not an instance of UpdateHelperInterface.'
-                    : 'UpdateHelper error: '.$e->getPrevious()->getMessage().
-                        "\nFile: ".$e->getPrevious()->getFile().
-                        "\nLine:".$e->getPrevious()->getLine().
-                        "\n\n".$e->getPrevious()->getTraceAsString()
-                );
+            } catch (InvalidArgumentException $exception) {
+                $io->writeError(static::getErrorMessage($exception, $file, $class));
                 continue;
             }
         }
+    }
+
+    protected static function getErrorMessage(InvalidArgumentException $exception, $file, $class)
+    {
+        if ($exception instanceof NotUpdateInterfaceInstanceException) {
+            return 'UpdateHelper error in '.$file.":\n".JsonFile::encode($class).' is not an instance of UpdateHelperInterface.';
+        }
+
+        return 'UpdateHelper error: '.$exception->getPrevious()->getMessage().
+            "\nFile: ".$exception->getPrevious()->getFile().
+            "\nLine:".$exception->getPrevious()->getLine().
+            "\n\n".$exception->getPrevious()->getTraceAsString();
     }
 
     public static function check(Event $event)
