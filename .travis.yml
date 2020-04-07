@@ -41,3 +41,6 @@ matrix:
       env: coverage=true
     - php: nightly
       env: setup=nightly
+  allow_failures:
+    - php: nightly
+      env: setup=nightly
