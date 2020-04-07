@@ -17,9 +17,15 @@ class ComposerPlugin implements PluginInterface, EventSubscriberInterface
         $this->io = $io;
     }
 
-    public function deactivate(Composer $composer, IOInterface $io) {}
+    public function deactivate(Composer $composer, IOInterface $io)
+    {
+        // Not needed
+    }
 
-    public function uninstall(Composer $composer, IOInterface $io) {}
+    public function uninstall(Composer $composer, IOInterface $io)
+    {
+        // Not needed
+    }
 
     public static function getSubscribedEvents()
     {

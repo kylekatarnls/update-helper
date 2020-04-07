@@ -66,18 +66,21 @@ class UpdateHelperTest extends TestCase
         return $this->helper;
     }
 
-    /**
-     * @return UpdateHelper
-     */
-    protected function buildRichHelper()
+    protected function getPackageEvent($composer, $io)
     {
-        chdir(__DIR__.'/mixtures/app4');
-        $composer = new Composer();
-        $config = new Config();
-        $config->setConfigSource(new JsonConfigSource(new JsonFile('composer.json')));
-        $composer->setConfig($config);
-        $io = new TestIO();
-        $event = new PackageEvent(
+        if (intval(Composer::getVersion()) >= 2) {
+            return new PackageEvent(
+                'update',
+                $composer,
+                $io,
+                false,
+                new CompositeRepository(array()),
+                array(),
+                new InstallOperation(new Package('foo/bar', '1.0.0', '1.0.0'))
+            );
+        }
+
+        return new PackageEvent(
             'update',
             $composer,
             $io,
@@ -89,6 +92,20 @@ class UpdateHelperTest extends TestCase
             array(),
             new InstallOperation(new Package('foo/bar', '1.0.0', '1.0.0'))
         );
+    }
+
+    /**
+     * @return UpdateHelper
+     */
+    protected function buildRichHelper()
+    {
+        chdir(__DIR__.'/mixtures/app4');
+        $composer = new Composer();
+        $config = new Config();
+        $config->setConfigSource(new JsonConfigSource(new JsonFile('composer.json')));
+        $composer->setConfig($config);
+        $io = new TestIO();
+        $event = $this->getPackageEvent($composer, $io);
 
         return new UpdateHelper($event, $io);
     }

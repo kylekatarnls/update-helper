@@ -14,6 +14,7 @@ env:
 install:
   - if [[ $setup = 'nightly'  ]]; then COMPOSER_MEMORY_LIMIT=-1 travis_retry composer update --prefer-dist --no-interaction --no-suggest --ignore-platform-reqs; fi
   - if [[ $setup = 'basic'  ]]; then COMPOSER_MEMORY_LIMIT=-1 travis_retry composer update --prefer-dist --no-interaction --no-suggest; fi
+  - if [[ $setup = 'lowest'  ]]; then COMPOSER_MEMORY_LIMIT=-1 travis_retry composer update --prefer-lowest --prefer-dist --no-interaction --no-suggest; fi
 
 script:
   - vendor/bin/phpunit --verbose --coverage-clover=coverage.xml --coverage-text
@@ -23,6 +24,9 @@ after_success:
 
 matrix:
   include:
+    - php: '5.3'
+      dist: precise
+      env: setup=lowest
     - php: '5.3'
       dist: precise
     - php: '5.4'
