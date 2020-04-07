@@ -200,7 +200,10 @@ class UpdateHelperTest extends TestCase
     public function testConstruct()
     {
         self::assertInstanceOf('UpdateHelper\\UpdateHelper', $this->buildHelper());
-        self::assertInstanceOf('UpdateHelper\\UpdateHelper', $this->buildRichHelper());
+
+        if (version_compare(phpversion(), '8.0.0-dev', '<')) {
+            self::assertInstanceOf('UpdateHelper\\UpdateHelper', $this->buildRichHelper());
+        }
     }
 
     public function testGetFile()
