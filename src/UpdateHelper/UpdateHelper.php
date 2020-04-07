@@ -111,7 +111,8 @@ class UpdateHelper
             try {
                 static::checkHelper($event, $io, $composer, $class);
             } catch (InvalidArgumentException $e) {
-                $io->writeError($e instanceof NotUpdateInterfaceInstanceException
+                $io->writeError(
+                    $e instanceof NotUpdateInterfaceInstanceException
                     ? 'UpdateHelper error in '.$file.":\n".JsonFile::encode($class).' is not an instance of UpdateHelperInterface.'
                     : 'UpdateHelper error: '.$e->getPrevious()->getMessage().
                         "\nFile: ".$e->getPrevious()->getFile().
